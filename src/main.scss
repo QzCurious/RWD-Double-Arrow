@@ -1,0 +1,94 @@
+@use 'sass:math';
+@use 'sass:string';
+
+// reset
+*,
+::before,
+::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.full-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: rgb(75, 110, 185);
+}
+
+.title {
+    color: #ccc;
+    font-size: 2.8rem;
+}
+
+.double-arrow {
+    @mixin arrow($thickness: 4px, $lenght: 16px, $color: #000) {
+        @if ($thickness > $lenght - $thickness) {
+            @error "This configuration will produce an ungly arrow";
+        }
+
+        display: inline-block;
+        padding: ($lenght - $thickness) / 2;
+        border: solid $color;
+        border-width: 0 $thickness $thickness 0;
+    }
+
+    $color: #d6b85e;
+    $length: 100%;
+    $thickness: 10px;
+    $wing-length: 40px;
+
+    $padding: math.sqrt(2) * $thickness / 2;
+    $wing-offset: (math.sqrt(2) - 1) / 2 * $wing-length;
+
+    // 1. I use `background-color` to draw center line of the double-arrow.
+    //    By default, background is extended behind the border, that is,
+    //    `background-clip: border-box`). Set `background-clip: content-box`
+    //    to prevent `background-color` apply to borders (and paddings).
+    // 2. For me, `padding` makes it harder to `position` the wings to the
+    //    right place. To simulate the space it should occupy, See 3.
+    // 3. Because the wings create a new stacking context
+    //    (`position: absolute`), they don't take space. But I don't want
+    //    the double-arrow to accidentally overlap other elements. So
+    //    `border` is here to help. The width of top and bottom border act
+    //    as padding. And for border to take space without color, make it
+    //    `solid` and `transparent` (so weird).
+    // 4. Lastly, `height` SHOULD only define height of center line, set
+    //    `box-sizing: content-box`.
+    display: inline-flex;
+    position: relative;
+    box-sizing: content-box;
+    align-items: center;
+    width: calc(#{$length} - #{$padding*2});
+    min-width: calc(#{math.sqrt(2) *$wing-length * 3 / 2} - #{$padding * 2});
+    height: $thickness;
+    padding: 0 $padding;
+    border: solid transparent;
+    border-width: math.sqrt(2) *$wing-length/2 0;
+    background-clip: content-box;
+    background-color: $color;
+
+    &::before,
+    &::after {
+        @include arrow($thickness, $wing-length, $color);
+
+        content: '';
+        position: absolute;
+        // thought I can do the math to "align" the wings
+        // to the center line. `align-items` is simpler
+        //top: - ($wing-length - $thickness) / 2;
+    }
+
+    &::before {
+        left: $wing-offset;
+        transform: rotate(135deg);
+    }
+
+    &::after {
+        right: $wing-offset;
+        transform: rotate(-45deg);
+    }
+}
